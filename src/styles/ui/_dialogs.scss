@@ -346,10 +346,10 @@
      */
 
     /**
-     * The image dialog supports the insertion of images, the dialog has a
+     * The image, i mean custom link, dialog supports the insertion of images, the dialog has a
      * number of states to support the various steps in inserting an image.
      */
-    &.ct-image-dialog {
+    &.ct-custom-link-dialog {
 
         // States
 
@@ -437,6 +437,53 @@
             position: absolute;
             top: 0;
         }
+    }
+
+    &.ct-image-dialog {
+
+        // States
+
+        // No image file specified
+        &--empty {
+
+            .ct-progress-bar,
+            .ct-control--rotate-ccw,
+            .ct-control--rotate-cw,
+            .ct-control--crop,
+            .ct-control--insert,
+            .ct-control--cancel,
+            .ct-control--clear {
+                display: none;
+            }
+
+        }
+
+        // An image file is currently being uploaded to the server
+        &--uploading {
+
+            .ct-control--rotate-ccw,
+            .ct-control--rotate-cw,
+            .ct-control--crop,
+            .ct-control--upload,
+            .ct-control--insert,
+            .ct-control--clear {
+                display: none;
+            }
+
+        }
+
+        // The dialog is displaying an image uploaded to the server ready to be
+        // inserted into the page.
+        &--populated {
+
+            .ct-progress-bar,
+            .ct-control--upload,
+            .ct-control--cancel {
+                display: none;
+            }
+
+        }
+
     }
 
 

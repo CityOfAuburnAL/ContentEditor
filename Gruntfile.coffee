@@ -40,6 +40,7 @@ module.exports = (grunt) ->
                         'src/scripts/tools.coffee'
                         
                         # Custom
+                        'src/scripts/ui/dialogs/customlink.coffee'
                         'src/scripts/customlink.coffee'
                     ]
 
