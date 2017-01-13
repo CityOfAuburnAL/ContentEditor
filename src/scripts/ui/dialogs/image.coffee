@@ -199,7 +199,7 @@ class ContentTools.ImageDialog extends ContentTools.DialogUI
             @_domView.appendChild(@_domImage)
 
         # Set the image to appear
-        @_domImage.style['background-image'] = "url(#{ imageURL })"
+        @_domImage.style['background-image'] = "url('#{ imageURL }')"
 
         # Set the dialog to populated
         @state('populated')
