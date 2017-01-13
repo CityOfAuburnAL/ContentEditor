@@ -45,6 +45,12 @@ class CustomLinkTool extends ContentTools.Tools.Link
 				# Select the link in full
 				selection = new ContentSelect.Range(starts, ends)
 				selection.select(element.domElement())
+			else
+				# Custom bit here to deselect whitespace after a word (from double-clicking)
+				[from, to] = selection.get()
+				if element.content.characters[to - 1].isWhitespace()
+						selection = new ContentSelect.Range(from, to - 1)
+						selection.select(element.domElement())
 
 			# Text elements
 			element.storeState()
@@ -136,6 +142,11 @@ class CustomLinkTool extends ContentTools.Tools.Link
 			else
                 # Text elements
 
+				# Clear pseudo-select? I dunno.
+				if element.content
+                    # Remove the fake selection from the element
+                    element.content = element.content.unformat(from, to, selectTag)
+
                 # Clear any existing link
                 element.content = element.content.unformat(from, to, 'a')
 
@@ -146,6 +157,7 @@ class CustomLinkTool extends ContentTools.Tools.Link
                     element.content.optimize()
 
                 element.updateInnerHTML()
+                element.restoreState()
 
             # Make sure the element is marked as tainted
             element.taint()
@@ -156,7 +168,7 @@ class CustomLinkTool extends ContentTools.Tools.Link
 			callback(true)
 			
 			# Dispatch `applied` event
-			@dispatchEditorEvent('tool-applied', toolDetail)
+			@dispatchEditorEvent(@createEvent('tool-apply', toolDetail))
 			
 		app.attach(modal)
 		app.attach(dialog)
