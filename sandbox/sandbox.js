@@ -1,5 +1,5 @@
 (function() {
-  var ImageUploader;
+  var ImageUploader, PDFUploader;
 
   ImageUploader = (function() {
     ImageUploader.imagePath = 'image.png';
@@ -137,9 +137,113 @@
 
   window.ImageUploader = ImageUploader;
 
+  PDFUploader = (function() {
+    PDFUploader.pdfPath = 'doc.pdf';
+
+    function PDFUploader(dialog) {
+      this._dialog = dialog;
+      this._dialog.addEventListener('cancel', (function(_this) {
+        return function() {
+          return _this._onCancel();
+        };
+      })(this));
+      this._dialog.addEventListener('pdfuploader.cancelupload', (function(_this) {
+        return function() {
+          return _this._onCancelUpload();
+        };
+      })(this));
+      this._dialog.addEventListener('pdfuploader.clear', (function(_this) {
+        return function() {
+          return _this._onClear();
+        };
+      })(this));
+      this._dialog.addEventListener('pdfuploader.fileready', (function(_this) {
+        return function(ev) {
+          return _this._onFileReady(ev.detail().file);
+        };
+      })(this));
+      this._dialog.addEventListener('pdfuploader.mount', (function(_this) {
+        return function() {
+          return _this._onMount();
+        };
+      })(this));
+      this._dialog.addEventListener('pdfuploader.save', (function(_this) {
+        return function() {
+          return _this._onSave();
+        };
+      })(this));
+      this._dialog.addEventListener('pdfuploader.unmount', (function(_this) {
+        return function() {
+          return _this._onUnmount();
+        };
+      })(this));
+    }
+
+    PDFUploader.prototype._onCancel = function() {};
+
+    PDFUploader.prototype._onCancelUpload = function() {
+      clearTimeout(this._uploadingTimeout);
+      return this._dialog.state('empty');
+    };
+
+    PDFUploader.prototype._onClear = function() {
+      return this._dialog.clear();
+    };
+
+    PDFUploader.prototype._onFileReady = function(file) {
+      var upload;
+      console.log(file);
+      this._dialog.progress(0);
+      this._dialog.state('uploading');
+      upload = (function(_this) {
+        return function() {
+          var progress;
+          progress = _this._dialog.progress();
+          progress += 1;
+          if (progress <= 100) {
+            _this._dialog.progress(progress);
+            return _this._uploadingTimeout = setTimeout(upload, 25);
+          } else {
+            return _this._dialog.populate(PDFUploader.pdfPath);
+          }
+        };
+      })(this);
+      return this._uploadingTimeout = setTimeout(upload, 25);
+    };
+
+    PDFUploader.prototype._onMount = function() {};
+
+    PDFUploader.prototype._onSave = function() {
+      var clearBusy;
+      this._dialog.busy(true);
+      clearBusy = (function(_this) {
+        return function() {
+          _this._dialog.busy(false);
+          return _this._dialog.save(PDFUploader.pdfPath, {
+            alt: 'Example of bad variable names'
+          });
+        };
+      })(this);
+      return setTimeout(clearBusy, 1500);
+    };
+
+    PDFUploader.prototype._onUnmount = function() {};
+
+    PDFUploader.createPDFUploader = function(dialog) {
+      return new PDFUploader(dialog);
+    };
+
+    return PDFUploader;
+
+  })();
+
+  window.PDFUploader = PDFUploader;
+
   window.onload = function() {
     var FIXTURE_TOOLS, editor, req;
     ContentTools.IMAGE_UPLOADER = ImageUploader.createImageUploader;
+    ContentTools.PDF_UPLOADER = PDFUploader.createPDFUploader;
+    ContentTools.DEFAULT_TOOLS = [['bold', 'italic', 'link', 'align-left', 'align-center', 'align-right'], ['heading', 'subheading', 'paragraph', 'unordered-list', 'ordered-list', 'table', 'indent', 'unindent', 'line-break'], ['image', 'video', 'preformatted'], ['custom-link'], ['undo', 'redo', 'remove']];
     ContentTools.StylePalette.add([new ContentTools.Style('By-line', 'article__by-line', ['p']), new ContentTools.Style('Caption', 'article__caption', ['p']), new ContentTools.Style('Example', 'example', ['pre']), new ContentTools.Style('Example + Good', 'example--good', ['pre']), new ContentTools.Style('Example + Bad', 'example--bad', ['pre'])]);
     editor = ContentTools.EditorApp.get();
     editor.init('[data-editable], [data-fixture]', 'data-name');
