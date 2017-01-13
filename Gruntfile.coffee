@@ -48,6 +48,7 @@ module.exports = (grunt) ->
                 files:
                     'sandbox/sandbox.js': [
                         'src/sandbox/image-uploader.coffee'
+                        'src/sandbox/pdf-uploader.coffee'
                         'src/sandbox/sandbox.coffee'
                         ]
 

@@ -356,13 +356,7 @@
         // No image file specified
         &--empty {
 
-            .ct-progress-bar,
-            .ct-control--rotate-ccw,
-            .ct-control--rotate-cw,
-            .ct-control--crop,
-            .ct-control--insert,
-            .ct-control--cancel,
-            .ct-control--clear {
+            .ct-progress-bar {
                 display: none;
             }
 
@@ -386,14 +380,108 @@
         // inserted into the page.
         &--populated {
 
-            .ct-progress-bar,
-            .ct-control--upload,
-            .ct-control--cancel {
+            .ct-progress-bar {
                 display: none;
             }
 
         }
+    }
 
+    .ct-custom-link-dialog {
+        &__view {
+            display: flex;
+            flex-direction: row;
+            background: #eee;
+            position: relative;
+
+            &:empty {
+                @include type-icons($font-size: 80px);
+                line-height: 320px;
+                text-align: center;
+
+                &:after {
+                    color: white;
+                    content: 'Choose a link type';
+                }
+            }
+
+            .ct-control-group {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                width: 125px;
+
+                &--wide {
+                    width: 100%;
+
+                    .ct-progress-bar {
+                        width: 100%;
+                        .ct-progress-bar__progress {
+                            width: 0;
+                        }
+                    }
+                }
+
+                .ct-control {
+                    margin-top: 12px;
+
+                    &--active {
+                        background: #2ea0ce;
+                    }
+                }
+            }
+
+            .ct-section-group {
+                width: 100%;
+            }
+
+            .ct-section {
+                flex-basis: 100%;
+                flex-grow: 2;
+                margin: 12px 0 0 12px;
+
+                & + & {
+                    margin-top: 2px;
+                }
+
+                &.ct-section--contains-input {
+                    display: flex;
+
+                    input {
+                        flex-grow: 2;
+                        width: auto;
+                    }
+                }
+
+                .ct-section__label {
+                    width: auto;
+                }
+            }
+        }
+
+        &__image {
+            background-color: transparent;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-size: contain;
+            height: 100%;
+            width: 100%;
+        }
+
+        /**
+         * HACK: We style the file upload button as a control, however to ensure
+         * the user activates the system file browser dialog we hide the file
+         * input in the control and use a large font to ensure it covers the
+         * whole control.
+         */
+        &__file-upload {
+            cursor: pointer;
+            font-size: 400px;
+            left: 0;
+            opacity: 0;
+            position: absolute;
+            top: 0;
+        }
     }
 
     .ct-image-dialog {

@@ -167,8 +167,8 @@ class CustomLinkTool extends ContentTools.Tools.Link
 			
 			callback(true)
 			
-			# Dispatch `applied` event
-			@dispatchEditorEvent(@createEvent('tool-apply', toolDetail))
+		# Dispatch `applied` event
+		@dispatchEditorEvent('tool-apply', toolDetail)
 			
 		app.attach(modal)
 		app.attach(dialog)
