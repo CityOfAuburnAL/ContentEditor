@@ -10989,7 +10989,7 @@
       }
       _ref = selection.get(), from = _ref[0], to = _ref[1];
       selectedString = '';
-      while (from <= to) {
+      while (from < to) {
         selectedString += element.content.characters[from]._c;
         from++;
       }

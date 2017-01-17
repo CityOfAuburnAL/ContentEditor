@@ -36,7 +36,7 @@ class CustomCreateTool extends ContentTools.Tools.Link
 		# Get Text
 		[from, to] = selection.get()
 		selectedString = ''
-		while from <= to
+		while from < to
 			selectedString += element.content.characters[from]._c
 			from++
 		
