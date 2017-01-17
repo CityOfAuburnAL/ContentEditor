@@ -397,7 +397,7 @@ class BasicAnchorUI extends ContentTools.AnchoredComponentUI
 
 	populate: (v) ->
 
-		@_url = v
+		@_domInput.value = v
 
 	_addDOMEventListeners: () ->
 		super()
@@ -421,9 +421,9 @@ class BasicAnchorUI extends ContentTools.AnchoredComponentUI
 	targetValue: () ->
 		#targetCSSClass = @_domTargetSection.getAttribute('class')
 		#return (targetCSSClass.indexOf('ct-section--applied') > -1 ? '_blank' : null)
-		if @_url.indexOf('//') is -1
-			return '_blank'
-		return null
+		if @_domInput.value.indexOf('//') is -1
+			return null
+		return '_blank'
 
 class MailToUI extends ContentTools.AnchoredComponentUI
 
