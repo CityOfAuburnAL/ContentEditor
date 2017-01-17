@@ -42,6 +42,7 @@ module.exports = (grunt) ->
                         # Custom
                         'src/scripts/ui/dialogs/customlink.coffee'
                         'src/scripts/customlink.coffee'
+                        'src/scripts/customcreate.coffee'
                     ]
 
             sandbox:
@@ -49,6 +50,7 @@ module.exports = (grunt) ->
                     'sandbox/sandbox.js': [
                         'src/sandbox/image-uploader.coffee'
                         'src/sandbox/pdf-uploader.coffee'
+                        'src/sandbox/page-uploader.coffee'
                         'src/sandbox/sandbox.coffee'
                         ]
 

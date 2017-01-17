@@ -1,5 +1,5 @@
 (function() {
-  var ImageUploader, PDFUploader;
+  var ImageUploader, PDFUploader, PageUploader;
 
   ImageUploader = (function() {
     ImageUploader.imagePath = 'image.png';
@@ -239,11 +239,54 @@
 
   window.PDFUploader = PDFUploader;
 
+  PageUploader = (function() {
+    PageUploader.pagePath = 'new-page';
+
+    function PageUploader(dialog) {
+      this._dialog = dialog;
+      if (!this._dialog.addEventListener) {
+        return;
+      }
+      this._dialog.addEventListener('pageuploader.create', (function(_this) {
+        return function(ev) {
+          return _this._onCreate(ev.detail().name);
+        };
+      })(this));
+    }
+
+    PageUploader.prototype.Create = function(pageName) {
+      var upload;
+      console.log(pageName);
+      this._progress = 0;
+      upload = (function(_this) {
+        return function() {
+          _this._progress += 5;
+          if (_this._progress <= 100) {
+            return _this._uploadingTimeout = setTimeout(upload, 25);
+          } else {
+            return _this._dialog.populate(PageUploader.pagePath);
+          }
+        };
+      })(this);
+      return this._uploadingTimeout = setTimeout(upload, 25);
+    };
+
+    PageUploader.createPageUploader = function(dialog) {
+      return new PageUploader(dialog);
+    };
+
+    return PageUploader;
+
+  })();
+
+  window.PageUploader = PageUploader;
+
   window.onload = function() {
     var FIXTURE_TOOLS, editor, req;
     ContentTools.IMAGE_UPLOADER = ImageUploader.createImageUploader;
     ContentTools.PDF_UPLOADER = PDFUploader.createPDFUploader;
-    ContentTools.DEFAULT_TOOLS = [['bold', 'italic', 'link', 'align-left', 'align-center', 'align-right'], ['heading', 'subheading', 'paragraph', 'unordered-list', 'ordered-list', 'table', 'indent', 'unindent', 'line-break'], ['image', 'video', 'preformatted'], ['custom-link'], ['undo', 'redo', 'remove']];
+    ContentTools.PAGE_UPLOADER = PageUploader.createPageUploader;
+    ContentTools.DEFAULT_TOOLS = [['bold', 'italic', 'link', 'align-left', 'align-center', 'align-right'], ['heading', 'subheading', 'paragraph', 'unordered-list', 'ordered-list', 'table', 'indent', 'unindent', 'line-break'], ['image', 'video', 'preformatted'], ['custom-link', 'custom-create'], ['undo', 'redo', 'remove']];
     ContentTools.StylePalette.add([new ContentTools.Style('By-line', 'article__by-line', ['p']), new ContentTools.Style('Caption', 'article__caption', ['p']), new ContentTools.Style('Example', 'example', ['pre']), new ContentTools.Style('Example + Good', 'example--good', ['pre']), new ContentTools.Style('Example + Bad', 'example--bad', ['pre'])]);
     editor = ContentTools.EditorApp.get();
     editor.init('[data-editable], [data-fixture]', 'data-name');

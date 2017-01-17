@@ -2,6 +2,7 @@ window.onload = () ->
 
     ContentTools.IMAGE_UPLOADER = ImageUploader.createImageUploader
     ContentTools.PDF_UPLOADER = PDFUploader.createPDFUploader
+    ContentTools.PAGE_UPLOADER = PageUploader.createPageUploader
     ContentTools.DEFAULT_TOOLS = [
       [
           'bold',
@@ -25,7 +26,8 @@ window.onload = () ->
           'video',
           'preformatted'
       ], [
-          'custom-link'
+          'custom-link',
+          'custom-create'
       ], [
           'undo',
           'redo',
