@@ -5385,7 +5385,7 @@
 }).call(this);
 
 (function() {
-  var AttributeUI, BasicAnchorUI, ContentTools, CropMarksUI, CustomLinkTool, MailToUI, PDFUploaderUI, StyleUI, exports, _EditorApp,
+  var AttributeUI, BasicAnchorUI, ContentTools, CropMarksUI, CustomCreateTool, CustomLinkTool, MailToUI, PDFUploaderUI, StyleUI, exports, _EditorApp,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -10943,5 +10943,82 @@
   })(ContentTools.Tools.Link);
 
   ContentTools.DEFAULT_TOOLS[0].push('custom-link');
+
+  CustomCreateTool = (function(_super) {
+    __extends(CustomCreateTool, _super);
+
+    function CustomCreateTool() {
+      return CustomCreateTool.__super__.constructor.apply(this, arguments);
+    }
+
+    ContentTools.ToolShelf.stow(CustomCreateTool, 'custom-create');
+
+    CustomCreateTool.label = 'Create Page';
+
+    CustomCreateTool.icon = 'create';
+
+    CustomCreateTool.tagName = 'a';
+
+    CustomCreateTool.canApply = function(element, selection) {
+      var from, to, _ref;
+      if (!ContentTools.PAGE_UPLOADER) {
+        return false;
+      }
+      if (!selection || selection.isCollapsed()) {
+        return false;
+      }
+      if (!element.content || element.content.length === 0) {
+        return false;
+      }
+      _ref = selection.get(), from = _ref[0], to = _ref[1];
+      if (from === to) {
+        to += 1;
+      }
+      return !element.content.slice(from, to).hasTags(this.tagName, true);
+    };
+
+    CustomCreateTool.apply = function(element, selection, callback) {
+      var from, selectedString, to, toolDetail, _ref;
+      toolDetail = {
+        'tool': this,
+        'element': element,
+        'selection': selection
+      };
+      if (!this.dispatchEditorEvent('tool-apply', toolDetail)) {
+        return;
+      }
+      _ref = selection.get(), from = _ref[0], to = _ref[1];
+      selectedString = '';
+      while (from <= to) {
+        selectedString += element.content.characters[from]._c;
+        from++;
+      }
+      ContentTools.PAGE_UPLOADER(this).Create(selectedString);
+      element.storeState();
+      this.element = element;
+      this.selection = selection;
+      this.callback = callback;
+      this.dispatchEditorEvent('tool-apply', toolDetail);
+      this.element.taint();
+      return this.callback(true);
+    };
+
+    CustomCreateTool.populate = function(href) {
+      var a, from, to, _ref;
+      _ref = this.selection.get(), from = _ref[0], to = _ref[1];
+      a = new HTMLString.Tag('a', {
+        href: href
+      });
+      this.element.content = this.element.content.format(from, to, a);
+      this.element.content.optimize();
+      this.element.updateInnerHTML();
+      return this.element.restoreState();
+    };
+
+    return CustomCreateTool;
+
+  })(ContentTools.Tools.Link);
+
+  ContentTools.DEFAULT_TOOLS[0].push('custom-create');
 
 }).call(this);
