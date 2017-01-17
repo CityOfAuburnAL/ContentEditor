@@ -10573,7 +10573,7 @@
     };
 
     BasicAnchorUI.prototype.populate = function(v) {
-      return this._url = v;
+      return this._domInput.value = v;
     };
 
     BasicAnchorUI.prototype._addDOMEventListeners = function() {
@@ -10612,10 +10612,10 @@
     };
 
     BasicAnchorUI.prototype.targetValue = function() {
-      if (this._url.indexOf('//') === -1) {
-        return '_blank';
+      if (this._domInput.value.indexOf('//') === -1) {
+        return null;
       }
-      return null;
+      return '_blank';
     };
 
     return BasicAnchorUI;
