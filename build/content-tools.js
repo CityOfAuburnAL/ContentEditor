@@ -10501,7 +10501,8 @@
       return this._domView.addEventListener('keypress', (function(_this) {
         return function(ev) {
           if (ev.keyCode === 13) {
-            return _this.save();
+            _this.save();
+            return ev.preventDefault();
           }
         };
       })(this));

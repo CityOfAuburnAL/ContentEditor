@@ -315,10 +315,11 @@ class ContentTools.CustomLinkDialog extends ContentTools.DialogUI
 		# Creates/Updates Anchor
 		@_domInsert.addEventListener 'click', (ev) =>
 			@save()
-
+		
 		@_domView.addEventListener 'keypress', (ev) =>
 			if ev.keyCode is 13
 				@save()
+				ev.preventDefault()
 
 class BasicAnchorUI extends ContentTools.AnchoredComponentUI
 
