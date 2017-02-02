@@ -1,5 +1,20 @@
 # ContentTools
 
+## COA Notes
+
+### Adding/Testing new tool
+
+* Add Tool class to /src/scripts/
+* (Optionally) Add Tool Dialog class to /src/scripts/ui/dialogs/
+* Add tool style to /src/styles/ui/_toolbox.scss
+* (Needs more Instruction) Do magic thing with iconmoon
+* Add script files to /Gruntfile.coffee build process
+* (Optionally) Modify /src/sandbox/sandbox.coffee to include the tool you are testing
+* (Optionally) Run grunt sandbox
+* Run grunt build (npm install if needed) OR grunt watch if continuing development
+* browse to /sandbox/ and see if it worked OR refresh if using grunt watch
+
+
 [![Build Status](https://travis-ci.org/GetmeUK/ContentTools.svg?branch=master)](https://travis-ci.org/GetmeUK/ContentTools)
 [![Join the chat at https://gitter.im/GetmeUK/ContentTools](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/GetmeUK/ContentTools?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 

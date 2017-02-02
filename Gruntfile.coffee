@@ -38,12 +38,19 @@ module.exports = (grunt) ->
                         'src/scripts/history.coffee'
                         'src/scripts/styles.coffee'
                         'src/scripts/tools.coffee'
+                        
+                        # Custom
+                        'src/scripts/ui/dialogs/customlink.coffee'
+                        'src/scripts/customlink.coffee'
+                        'src/scripts/customcreate.coffee'
                     ]
 
             sandbox:
                 files:
                     'sandbox/sandbox.js': [
                         'src/sandbox/image-uploader.coffee'
+                        'src/sandbox/pdf-uploader.coffee'
+                        'src/sandbox/page-uploader.coffee'
                         'src/sandbox/sandbox.coffee'
                         ]
 

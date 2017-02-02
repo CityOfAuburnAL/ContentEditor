@@ -1433,7 +1433,11 @@
         return range;
       }
       _ref = _getNodeRange(element, docRange), startNode = _ref[0], startOffset = _ref[1], endNode = _ref[2], endOffset = _ref[3];
-      range.set(_getOffsetOfChildNode(element, startNode) + startOffset, _getOffsetOfChildNode(element, endNode) + endOffset);
+      var rangeTo = Math.min(_getOffsetOfChildNode(element, endNode) + endOffset, element.innerText.length);
+      var rangeFrom = _getOffsetOfChildNode(element, startNode) + startOffset;
+      if (!docRange.collapsed)
+        rangeFrom = rangeFrom < rangeTo ? rangeFrom : 0;
+      range.set(rangeFrom, rangeTo);
       return range;
     };
 

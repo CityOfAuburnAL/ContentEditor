@@ -180,9 +180,12 @@
         &--line-break:before     { content: "\ea6e"; }
         &--image:before          { content: "\e90d"; }
         &--video:before          { content: "\ea98"; }
+        &--create:before         { content: "\e905"; }
         &--undo:before           { content: "\e965"; }
         &--redo:before           { content: "\e966"; }
         &--remove:before         { content: "\e9ac"; }
+
+        &--custom-link:before    { content: "\e9cb"; }
 
     } // .ct-tool
 

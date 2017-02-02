@@ -1,6 +1,39 @@
 window.onload = () ->
 
     ContentTools.IMAGE_UPLOADER = ImageUploader.createImageUploader
+    ContentTools.PDF_UPLOADER = PDFUploader.createPDFUploader
+    ContentTools.PAGE_UPLOADER = PageUploader.createPageUploader
+    ContentTools.DEFAULT_TOOLS = [
+      [
+          'bold',
+          'italic',
+          'link',
+          'align-left',
+          'align-center',
+          'align-right'
+      ], [
+          'heading',
+          'subheading',
+          'paragraph',
+          'unordered-list',
+          'ordered-list',
+          'table',
+          'indent',
+          'unindent',
+          'line-break'
+      ], [
+          'image',
+          'video',
+          'preformatted'
+      ], [
+          'custom-link',
+          'custom-create'
+      ], [
+          'undo',
+          'redo',
+          'remove'
+      ]
+  ]
 
     # Uncomment the following lines to use the cloudinary image uploader
     #CloudinaryImageUploader.CLOUD_NAME = ''

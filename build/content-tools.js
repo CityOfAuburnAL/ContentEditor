@@ -1433,7 +1433,11 @@
         return range;
       }
       _ref = _getNodeRange(element, docRange), startNode = _ref[0], startOffset = _ref[1], endNode = _ref[2], endOffset = _ref[3];
-      range.set(_getOffsetOfChildNode(element, startNode) + startOffset, _getOffsetOfChildNode(element, endNode) + endOffset);
+      var rangeTo = Math.min(_getOffsetOfChildNode(element, endNode) + endOffset, element.innerText.length);
+      var rangeFrom = _getOffsetOfChildNode(element, startNode) + startOffset;
+      if (!docRange.collapsed)
+        rangeFrom = rangeFrom < rangeTo ? rangeFrom : 0;
+      range.set(rangeFrom, rangeTo);
       return range;
     };
 
@@ -5385,7 +5389,7 @@
 }).call(this);
 
 (function() {
-  var AttributeUI, ContentTools, CropMarksUI, StyleUI, exports, _EditorApp,
+  var AttributeUI, BasicAnchorUI, ContentTools, CropMarksUI, CustomCreateTool, CustomLinkTool, MailToUI, PDFUploaderUI, StyleUI, exports, _EditorApp,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -6904,7 +6908,7 @@
         this._domImage = this.constructor.createDiv(['ct-image-dialog__image']);
         this._domView.appendChild(this._domImage);
       }
-      this._domImage.style['background-image'] = "url(" + imageURL + ")";
+      this._domImage.style['background-image'] = "url('" + imageURL + "')";
       return this.state('populated');
     };
 
@@ -7240,7 +7244,8 @@
       this._domInput.addEventListener('keypress', (function(_this) {
         return function(ev) {
           if (ev.keyCode === 13) {
-            return _this.save();
+            _this.save();
+            return ev.preventDefault();
           }
         };
       })(this));
@@ -10245,5 +10250,780 @@
     return Remove;
 
   })(ContentTools.Tool);
+
+  ContentTools.CustomLinkDialog = (function(_super) {
+    __extends(CustomLinkDialog, _super);
+
+    function CustomLinkDialog(href, target) {
+      if (href == null) {
+        href = '';
+      }
+      if (target == null) {
+        target = '';
+      }
+      CustomLinkDialog.__super__.constructor.call(this, 'Create/Update Link');
+      this._fullURL = href;
+      this._target = target;
+      this._mailTo = null;
+      this._pdfUploader = null;
+      this._state = 'empty';
+      if (this._fullURL) {
+        this._state = 'populated';
+      }
+      if (this._mailTo) {
+        this._state = 'populated-email';
+      } else if (this._pdf) {
+        this._state = 'populated-pdf';
+      }
+    }
+
+    CustomLinkDialog.prototype.anchorHref = function() {
+      if (this._basicAnchor) {
+        this._target = this._basicAnchor.targetValue();
+        return this._basicAnchor.anchorValue();
+      }
+      if (this._mailTo) {
+        this._target = null;
+        return this._mailTo.anchorValue();
+      }
+      if (this._pdfUploader) {
+        this._target = '_blank';
+        return this._pdfUploader.anchorValue();
+      }
+      return this._fullURL;
+    };
+
+    CustomLinkDialog.prototype.addBasicAnchor = function() {
+      if (this._basicAnchor) {
+        return;
+      }
+      ContentEdit.addCSSClass(this._domBasicAnchor, 'ct-control--active');
+      this.removeMailTo(true);
+      this.removePDFUploader(true);
+      this._basicAnchor = new BasicAnchorUI(this._fullURL, this._target);
+      return this._basicAnchor.mount(this._domView);
+    };
+
+    CustomLinkDialog.prototype.removeBasicAnchor = function() {
+      if (!this._basicAnchor) {
+        return;
+      }
+      this._basicAnchor.unmount();
+      this._basicAnchor = null;
+      return ContentEdit.removeCSSClass(this._domBasicAnchor, 'ct-control--active');
+    };
+
+    CustomLinkDialog.prototype.addMailTo = function() {
+      if (this._mailTo) {
+        return;
+      }
+      ContentEdit.addCSSClass(this._domMailTo, 'ct-control--active');
+      this.removeBasicAnchor();
+      this.removePDFUploader(true);
+      this._mailTo = new MailToUI(this._fullURL.replace('mailto:', ''));
+      return this._mailTo.mount(this._domView);
+    };
+
+    CustomLinkDialog.prototype.removeMailTo = function(change) {
+      if (change == null) {
+        change = false;
+      }
+      if (!this._mailTo) {
+        return;
+      }
+      this._mailTo.unmount();
+      this._mailTo = null;
+      ContentEdit.removeCSSClass(this._domMailTo, 'ct-control--active');
+      if (!change) {
+        return this.addBasicAnchor();
+      }
+    };
+
+    CustomLinkDialog.prototype.addPDFUploader = function() {
+      if (this._pdfUploader) {
+        return;
+      }
+      ContentEdit.addCSSClass(this._domPDF, 'ct-control--active');
+      this.removeBasicAnchor();
+      this.removeMailTo(true);
+      this._pdfUploader = new PDFUploaderUI();
+      return this._pdfUploader.mount(this._domView);
+    };
+
+    CustomLinkDialog.prototype.removePDFUploader = function(change) {
+      if (change == null) {
+        change = false;
+      }
+      if (!this._pdfUploader) {
+        return;
+      }
+      this._pdfUploader.unmount();
+      this._pdfUploader = null;
+      ContentEdit.removeCSSClass(this._domPDF, 'ct-control--active');
+      if (!change) {
+        return this.addBasicAnchor();
+      }
+    };
+
+    CustomLinkDialog.prototype.clear = function() {
+      this._fullURL = null;
+      this._target = null;
+      this.removeBasicAnchor();
+      this.removeMailTo();
+      this.removePDFUploader();
+      return this.save(null, null);
+    };
+
+    CustomLinkDialog.prototype.mount = function() {
+      var domActions, domViewControls;
+      CustomLinkDialog.__super__.mount.call(this);
+      ContentEdit.addCSSClass(this._domElement, 'ct-custom-link-dialog');
+      ContentEdit.addCSSClass(this._domElement, 'ct-custom-link-dialog--empty');
+      ContentEdit.addCSSClass(this._domView, 'ct-custom-link-dialog__view');
+      domViewControls = this.constructor.createDiv(['ct-control-group', 'ct-control-group--left']);
+      this._domView.appendChild(domViewControls);
+      this._domBasicAnchor = this.constructor.createDiv(['ct-control', 'ct-control--icon', 'ct-control--text', 'ct-control--anchor']);
+      this._domBasicAnchor.setAttribute('data-ct-tooltip', 'manual');
+      this._domBasicAnchor.textContent = ContentEdit._('Web');
+      domViewControls.appendChild(this._domBasicAnchor);
+      this._domMailTo = this.constructor.createDiv(['ct-control', 'ct-control--icon', 'ct-control--text', 'ct-control--mail']);
+      this._domMailTo.setAttribute('data-ct-tooltip', 'mailto');
+      this._domMailTo.textContent = ContentEdit._('E-Mail');
+      domViewControls.appendChild(this._domMailTo);
+      this._domPDF = this.constructor.createDiv(['ct-control', 'ct-control--icon', 'ct-control--text', 'ct-control--pdf']);
+      this._domPDF.setAttribute('data-ct-tooltip', 'pdf');
+      this._domPDF.textContent = ContentEdit._('PDF');
+      domViewControls.appendChild(this._domPDF);
+      if (this._fullURL.indexOf('mailto:') === 0) {
+        this.addMailTo();
+      } else if (this._fullURL.indexOf('.pdf') !== -1) {
+        this.addPDFUploader;
+      } else {
+        this.addBasicAnchor();
+      }
+      domActions = this.constructor.createDiv(['ct-control-group', 'ct-control-group--right']);
+      this._domControls.appendChild(domActions);
+      if (this._fullURL) {
+        this._domClear = this.constructor.createDiv(['ct-control', 'ct-control--text', 'ct-control--clear']);
+        this._domClear.textContent = ContentEdit._('Remove');
+        domActions.appendChild(this._domClear);
+      }
+      this._domCancel = this.constructor.createDiv(['ct-control', 'ct-control--text', 'ct-control--cancel']);
+      this._domCancel.textContent = ContentEdit._('Cancel');
+      domActions.appendChild(this._domCancel);
+      this._domInsert = this.constructor.createDiv(['ct-control', 'ct-control--text', 'ct-control--insert']);
+      if (this._fullURL) {
+        this._domInsert.textContent = ContentEdit._('Update');
+      } else {
+        this._domInsert.textContent = ContentEdit._('Insert');
+      }
+      domActions.appendChild(this._domInsert);
+      return this._addDOMEventListeners();
+    };
+
+    CustomLinkDialog.prototype.save = function(linkURL, target) {
+      linkURL = linkURL || this.anchorHref();
+      target = target || this._target;
+      if (target) {
+        return this.dispatchEvent(this.createEvent('save', {
+          'href': linkURL,
+          'target': target
+        }));
+      } else {
+        return this.dispatchEvent(this.createEvent('save', {
+          'href': linkURL
+        }));
+      }
+    };
+
+    CustomLinkDialog.prototype.state = function(state) {
+      var prevState;
+      if (state === void 0) {
+        return this._state;
+      }
+      if (this._state === state) {
+        return;
+      }
+      prevState = this._state;
+      this._state = state;
+      if (!this.isMounted()) {
+        return;
+      }
+      ContentEdit.addCSSClass(this._domElement, "ct-custom-link-dialog--" + this._state);
+      return ContentEdit.removeCSSClass(this._domElement, "ct-custom-link-dialog--" + prevState);
+    };
+
+    CustomLinkDialog.prototype.unmount = function() {
+      CustomLinkDialog.__super__.unmount.call(this);
+      this.removeBasicAnchor();
+      this.removeMailTo(true);
+      this.removePDFUploader(true);
+      this._domMailTo = null;
+      this._domPDF = null;
+      this._domClear = null;
+      this._domCancel = null;
+      return this._domInsert = null;
+    };
+
+    CustomLinkDialog.prototype._addDOMEventListeners = function() {
+      CustomLinkDialog.__super__._addDOMEventListeners.call(this);
+      if (this._domClear) {
+        this._domClear.addEventListener('click', (function(_this) {
+          return function(ev) {
+            return _this.clear();
+          };
+        })(this));
+      }
+      this._domCancel.addEventListener('click', (function(_this) {
+        return function(ev) {
+          return _this.dispatchEvent(_this.createEvent('cancel'));
+        };
+      })(this));
+      this._domBasicAnchor.addEventListener('click', (function(_this) {
+        return function(ev) {
+          _this.state('web');
+          return _this.addBasicAnchor();
+        };
+      })(this));
+      this._domMailTo.addEventListener('click', (function(_this) {
+        return function(ev) {
+          _this.state('mailTo');
+          return _this.addMailTo();
+        };
+      })(this));
+      this._domPDF.addEventListener('click', (function(_this) {
+        return function(ev) {
+          _this.state('pdf');
+          return _this.addPDFUploader();
+        };
+      })(this));
+      this._domInsert.addEventListener('click', (function(_this) {
+        return function(ev) {
+          return _this.save();
+        };
+      })(this));
+      return this._domView.addEventListener('keypress', (function(_this) {
+        return function(ev) {
+          if (ev.keyCode === 13) {
+            _this.save();
+            return ev.preventDefault();
+          }
+        };
+      })(this));
+    };
+
+    return CustomLinkDialog;
+
+  })(ContentTools.DialogUI);
+
+  BasicAnchorUI = (function(_super) {
+    __extends(BasicAnchorUI, _super);
+
+    function BasicAnchorUI(url, target) {
+      if (url == null) {
+        url = '';
+      }
+      if (target == null) {
+        target = '';
+      }
+      BasicAnchorUI.__super__.constructor.call(this);
+      this._url = url;
+      this._target = target;
+      if (ContentTools.PAGE_SELECTOR) {
+        ContentTools.PAGE_SELECTOR(this);
+      }
+    }
+
+    BasicAnchorUI.prototype.mount = function(domParent, before) {
+      var domInputLabel;
+      if (before == null) {
+        before = null;
+      }
+      this._domElement = this.constructor.createDiv(['ct-section-group', 'ct-section--other']);
+      this._domURL = this.constructor.createDiv(['ct-section', 'ct-section--applied', 'ct-section--contains-input']);
+      this._domElement.appendChild(this._domURL);
+      domInputLabel = this.constructor.createDiv(['ct-section__label']);
+      domInputLabel.textContent = ContentEdit._('URL');
+      this._domURL.appendChild(domInputLabel);
+      this._domInput = document.createElement('input');
+      this._domInput.setAttribute('class', 'ct-section__input');
+      this._domInput.setAttribute('name', 'url');
+      this._domInput.setAttribute('type', 'url');
+      this._domInput.setAttribute('autofocus', 'autofocus');
+      this._domInput.setAttribute('value', this._url);
+      this._domURL.appendChild(this._domInput);
+      if (ContentTools.PAGE_SELECTOR) {
+        this._domOutput = this.constructor.createDiv(['ct-output']);
+        this._domElement.appendChild(this._domOutput);
+        this.dispatchEvent(this.createEvent('pageselector.mount', {
+          input: this._domInput,
+          output: this._domOutput,
+          current: this._url
+        }));
+      }
+      return BasicAnchorUI.__super__.mount.call(this, domParent, before);
+    };
+
+    BasicAnchorUI.prototype.unmount = function() {
+      if (this.isMounted()) {
+        this._domInput.blur();
+      }
+      BasicAnchorUI.__super__.unmount.call(this);
+      this._domElement = null;
+      this._domURL = null;
+      this._domInput = null;
+      if (ContentTools.PAGE_SELECTOR) {
+        return this._domOutput = null;
+      }
+    };
+
+    BasicAnchorUI.prototype.populate = function(v) {
+      return this._domInput.value = v;
+    };
+
+    BasicAnchorUI.prototype._addDOMEventListeners = function() {
+      BasicAnchorUI.__super__._addDOMEventListeners.call(this);
+      if (ContentTools.PAGE_SELECTOR) {
+        this._domInput.addEventListener('keyup', (function(_this) {
+          return function(ev) {
+            return _this.dispatchEvent(_this.createEvent('pageselector.filter'), {
+              rawInput: ev.target.value
+            });
+          };
+        })(this));
+        return this._domOutput.addEventListener('click', (function(_this) {
+          return function(ev) {
+            var _results;
+            _results = [];
+            while (ev.target !== ev.currentTarget) {
+              if (ev.target.getAttribute('value')) {
+                _this.populate(ev.target.getAttribute('value'));
+                break;
+              } else {
+                _results.push(void 0);
+              }
+            }
+            return _results;
+          };
+        })(this));
+      }
+    };
+
+    BasicAnchorUI.prototype.anchorValue = function() {
+      if (this._domInput.value) {
+        return this._domInput.value;
+      }
+      return '';
+    };
+
+    BasicAnchorUI.prototype.targetValue = function() {
+      if (this._domInput.value.indexOf('//') === -1) {
+        return null;
+      }
+      return '_blank';
+    };
+
+    return BasicAnchorUI;
+
+  })(ContentTools.AnchoredComponentUI);
+
+  MailToUI = (function(_super) {
+    __extends(MailToUI, _super);
+
+    function MailToUI(email) {
+      if (email == null) {
+        email = '';
+      }
+      MailToUI.__super__.constructor.call(this);
+      this._userEmail = email;
+    }
+
+    MailToUI.prototype.mount = function(domParent, before) {
+      var domEmailLabel;
+      if (before == null) {
+        before = null;
+      }
+      this._domElement = this.constructor.createDiv(['ct-section', 'ct-section--mailto', 'ct-section--applied', 'ct-section--contains-input']);
+      domEmailLabel = this.constructor.createDiv(['ct-section__label']);
+      domEmailLabel.textContent = ContentEdit._('Email Address');
+      this._domElement.appendChild(domEmailLabel);
+      this._domInput = document.createElement('input');
+      this._domInput.setAttribute('class', 'ct-section__input');
+      this._domInput.setAttribute('name', 'email');
+      this._domInput.setAttribute('type', 'email');
+      this._domInput.setAttribute('autofocus', 'autofocus');
+      this._domInput.setAttribute('value', this._userEmail);
+      this._domElement.appendChild(this._domInput);
+      this.dispatchEvent(this.createEvent('contactmanager.mount'));
+      return MailToUI.__super__.mount.call(this, domParent, before);
+    };
+
+    MailToUI.prototype.unmount = function() {
+      if (this.isMounted()) {
+        this._domInput.blur();
+      }
+      MailToUI.__super__.unmount.call(this);
+      this._domElement = null;
+      return this._domInput = null;
+    };
+
+    MailToUI.prototype._addDOMEventListeners = function() {
+      MailToUI.__super__._addDOMEventListeners.call(this);
+      return this._domInput.addEventListener('keydown', (function(_this) {
+        return function(ev) {
+          if (ev.button === 13) {
+            return _this.dispatchEvent(_this.createEvent('save'));
+          }
+        };
+      })(this));
+    };
+
+    MailToUI.prototype.anchorValue = function() {
+      if (this._domInput.value) {
+        return 'mailto:' + this._domInput.value;
+      }
+      return '';
+    };
+
+    return MailToUI;
+
+  })(ContentTools.AnchoredComponentUI);
+
+  PDFUploaderUI = (function(_super) {
+    __extends(PDFUploaderUI, _super);
+
+    function PDFUploaderUI() {
+      PDFUploaderUI.__super__.constructor.call(this);
+      this._file = null;
+      this._progress = 0;
+      this._state = null;
+      if (ContentTools.PDF_UPLOADER) {
+        ContentTools.PDF_UPLOADER(this);
+      }
+    }
+
+    PDFUploaderUI.prototype.mount = function(domParent, before) {
+      var domActions, domProgressBar;
+      if (before == null) {
+        before = null;
+      }
+      this._domElement = this.constructor.createDiv(['ct-section', 'ct-section--pdf', 'ct-section--applied']);
+      domActions = this.constructor.createDiv(['ct-control-group', 'ct-control-group--wide']);
+      this._domElement.appendChild(domActions);
+      this._domUpload = this.constructor.createDiv(['ct-control', 'ct-control--text', 'ct-control--upload']);
+      this._domUpload.textContent = ContentEdit._('Upload');
+      domActions.appendChild(this._domUpload);
+      this._domInput = document.createElement('input');
+      this._domInput.setAttribute('class', 'ct-custom-link-dialog__file-upload');
+      this._domInput.setAttribute('name', 'file');
+      this._domInput.setAttribute('type', 'file');
+      this._domInput.setAttribute('accept', 'application/pdf');
+      this._domUpload.appendChild(this._domInput);
+      domProgressBar = this.constructor.createDiv(['ct-progress-bar']);
+      domActions.appendChild(domProgressBar);
+      this._domProgress = this.constructor.createDiv(['ct-progress-bar__progress']);
+      domProgressBar.appendChild(this._domProgress);
+      this.dispatchEvent(this.createEvent('pdfuploader.mount'));
+      return PDFUploaderUI.__super__.mount.call(this, domParent, before);
+    };
+
+    PDFUploaderUI.prototype.unmount = function() {
+      if (this.isMounted()) {
+        this._domInput.blur();
+      }
+      PDFUploaderUI.__super__.unmount.call(this);
+      this._domElement = null;
+      this._domProgress = null;
+      this._domInput = null;
+      this._domUpload = null;
+      return this.dispatchEvent(this.createEvent('pdfuploader.unmount'));
+    };
+
+    PDFUploaderUI.prototype.state = function(state) {
+      var prevState;
+      if (state === void 0) {
+        return this._state;
+      }
+      if (this._state === state) {
+        return;
+      }
+      prevState = this._state;
+      this._state = state;
+      if (!this.isMounted()) {
+        return;
+      }
+      ContentEdit.addCSSClass(this._domElement, "ct-section--" + this._state);
+      return ContentEdit.removeCSSClass(this._domElement, "ct-section--" + prevState);
+    };
+
+    PDFUploaderUI.prototype.progress = function(progress) {
+      if (progress === void 0) {
+        return this._progress;
+      }
+      this._progress = progress;
+      if (!this.isMounted()) {
+        return;
+      }
+      this._domProgress.style.width = "" + this._progress + "%";
+      if (this._progress === 100) {
+        return this._domProgress.style.backgroundColor = '#27ae60';
+      } else if (this._domProgress.style.backgroundColor !== '') {
+        return this._domProgress.style.backgroundColor = '';
+      }
+    };
+
+    PDFUploaderUI.prototype.populate = function(uploadedPath) {
+      return this._uploadedPath = uploadedPath;
+    };
+
+    PDFUploaderUI.prototype._addDOMEventListeners = function() {
+      PDFUploaderUI.__super__._addDOMEventListeners.call(this);
+      return this._domInput.addEventListener('change', (function(_this) {
+        return function(ev) {
+          var file;
+          file = ev.target.files[0];
+          ev.target.value = '';
+          if (ev.target.value) {
+            ev.target.type = 'text';
+            ev.target.type = 'file';
+          }
+          return _this.dispatchEvent(_this.createEvent('pdfuploader.fileready', {
+            file: file
+          }));
+        };
+      })(this));
+    };
+
+    PDFUploaderUI.prototype.anchorValue = function() {
+      if (this._uploadedPath) {
+        return this._uploadedPath;
+      }
+      return '';
+    };
+
+    return PDFUploaderUI;
+
+  })(ContentTools.AnchoredComponentUI);
+
+  CustomLinkTool = (function(_super) {
+    __extends(CustomLinkTool, _super);
+
+    function CustomLinkTool() {
+      return CustomLinkTool.__super__.constructor.apply(this, arguments);
+    }
+
+    ContentTools.ToolShelf.stow(CustomLinkTool, 'custom-link');
+
+    CustomLinkTool.label = 'Custom Link';
+
+    CustomLinkTool.icon = 'link';
+
+    CustomLinkTool.tagName = 'a';
+
+    CustomLinkTool.apply = function(element, selection, callback) {
+      var app, characters, dialog, domElement, ends, from, measureSpan, modal, rect, selectTag, starts, to, toolDetail, _ref, _ref1;
+      toolDetail = {
+        'tool': this,
+        'element': element,
+        'selection': selection
+      };
+      if (!this.dispatchEditorEvent('tool-apply', toolDetail)) {
+        return;
+      }
+      app = ContentTools.EditorApp.get();
+      if (element.type() === 'Image') {
+        rect = element.domElement().getBoundingClientRect();
+      } else {
+        if (selection.isCollapsed()) {
+          characters = element.content.characters;
+          starts = selection.get(0)[0];
+          ends = starts;
+          while (starts > 0 && characters[starts - 1].hasTags('a')) {
+            starts -= 1;
+          }
+          while (ends < characters.length && characters[ends].hasTags('a')) {
+            ends += 1;
+          }
+          selection = new ContentSelect.Range(starts, ends);
+          selection.select(element.domElement());
+        } else {
+          _ref = selection.get(), from = _ref[0], to = _ref[1];
+          if (element.content.characters[to - 1].isWhitespace()) {
+            selection = new ContentSelect.Range(from, to - 1);
+            selection.select(element.domElement());
+          }
+        }
+        element.storeState();
+        selectTag = new HTMLString.Tag('span', {
+          'class': 'ct--puesdo-select'
+        });
+        _ref1 = selection.get(), from = _ref1[0], to = _ref1[1];
+        element.content = element.content.format(from, to, selectTag);
+        element.updateInnerHTML();
+        domElement = element.domElement();
+        measureSpan = domElement.getElementsByClassName('ct--puesdo-select');
+        rect = measureSpan[0].getBoundingClientRect();
+      }
+      modal = new ContentTools.ModalUI();
+      dialog = new ContentTools.CustomLinkDialog(this.getAttr('href', element, selection), this.getAttr('target', element, selection));
+      dialog.addEventListener('cancel', (function(_this) {
+        return function() {
+          dialog.unmount();
+          dialog.hide();
+          modal.hide();
+          if (element.content) {
+            element.content = element.content.unformat(from, to, selectTag);
+            element.updateInnerHTML();
+            element.restoreState();
+          }
+          return callback(false);
+        };
+      })(this));
+      dialog.addEventListener('save', function(ev) {
+        var a, alignmentClassNames, className, detail, linkClasses, _i, _j, _len, _len1;
+        detail = ev.detail();
+        if (element.type() === 'Image') {
+          alignmentClassNames = ['align-center', 'align-left', 'align-right'];
+          if (detail.href) {
+            element.a = {
+              href: detail.href
+            };
+            if (element.a) {
+              element.a["class"] = element.a['class'];
+            }
+            if (detail.target) {
+              element.a.target = detail.target;
+            }
+            for (_i = 0, _len = alignmentClassNames.length; _i < _len; _i++) {
+              className = alignmentClassNames[_i];
+              if (element.hasCSSClass(className)) {
+                element.removeCSSClass(className);
+                element.a['class'] = className;
+                break;
+              }
+            }
+          } else {
+            linkClasses = [];
+            if (element.a['class']) {
+              linkClasses = element.a['class'].split(' ');
+            }
+            for (_j = 0, _len1 = alignmentClassNames.length; _j < _len1; _j++) {
+              className = alignmentClassNames[_j];
+              if (linkClasses.indexOf(className) > -1) {
+                element.addCSSClass(className);
+                break;
+              }
+            }
+            element.a = null;
+          }
+          element.unmount();
+          element.mount();
+        } else {
+          if (element.content) {
+            element.content = element.content.unformat(from, to, selectTag);
+          }
+          element.content = element.content.unformat(from, to, 'a');
+          if (detail.href) {
+            a = new HTMLString.Tag('a', detail);
+            element.content = element.content.format(from, to, a);
+            element.content.optimize();
+          }
+          element.updateInnerHTML();
+          element.restoreState();
+          element.taint();
+        }
+        modal.hide();
+        dialog.hide();
+        return callback(true);
+      });
+      this.dispatchEditorEvent('tool-apply', toolDetail);
+      app.attach(modal);
+      app.attach(dialog);
+      modal.show();
+      return dialog.show();
+    };
+
+    return CustomLinkTool;
+
+  })(ContentTools.Tools.Link);
+
+  ContentTools.DEFAULT_TOOLS[0].push('custom-link');
+
+  CustomCreateTool = (function(_super) {
+    __extends(CustomCreateTool, _super);
+
+    function CustomCreateTool() {
+      return CustomCreateTool.__super__.constructor.apply(this, arguments);
+    }
+
+    ContentTools.ToolShelf.stow(CustomCreateTool, 'custom-create');
+
+    CustomCreateTool.label = 'Create Page';
+
+    CustomCreateTool.icon = 'create';
+
+    CustomCreateTool.tagName = 'a';
+
+    CustomCreateTool.canApply = function(element, selection) {
+      var from, to, _ref;
+      if (!ContentTools.PAGE_UPLOADER) {
+        return false;
+      }
+      if (!selection || selection.isCollapsed()) {
+        return false;
+      }
+      if (!element.content || element.content.length === 0) {
+        return false;
+      }
+      _ref = selection.get(), from = _ref[0], to = _ref[1];
+      if (from === to) {
+        to += 1;
+      }
+      return !element.content.slice(from, to).hasTags(this.tagName, true);
+    };
+
+    CustomCreateTool.apply = function(element, selection, callback) {
+      var from, selectedString, to, toolDetail, _ref;
+      toolDetail = {
+        'tool': this,
+        'element': element,
+        'selection': selection
+      };
+      if (!this.dispatchEditorEvent('tool-apply', toolDetail)) {
+        return;
+      }
+      _ref = selection.get(), from = _ref[0], to = _ref[1];
+      selectedString = '';
+      while (from < to) {
+        selectedString += element.content.characters[from]._c;
+        from++;
+      }
+      ContentTools.PAGE_UPLOADER(this).Create(selectedString);
+      element.storeState();
+      this.element = element;
+      this.selection = selection;
+      this.callback = callback;
+      this.dispatchEditorEvent('tool-apply', toolDetail);
+      this.element.taint();
+      return this.callback(true);
+    };
+
+    CustomCreateTool.populate = function(href) {
+      var a, from, to, _ref;
+      _ref = this.selection.get(), from = _ref[0], to = _ref[1];
+      a = new HTMLString.Tag('a', {
+        href: href
+      });
+      this.element.content = this.element.content.format(from, to, a);
+      this.element.content.optimize();
+      this.element.updateInnerHTML();
+      return this.element.restoreState();
+    };
+
+    return CustomCreateTool;
+
+  })(ContentTools.Tools.Link);
+
+  ContentTools.DEFAULT_TOOLS[0].push('custom-create');
 
 }).call(this);
