@@ -1435,7 +1435,9 @@
       _ref = _getNodeRange(element, docRange), startNode = _ref[0], startOffset = _ref[1], endNode = _ref[2], endOffset = _ref[3];
       var rangeTo = Math.min(_getOffsetOfChildNode(element, endNode) + endOffset, element.innerText.length);
       var rangeFrom = _getOffsetOfChildNode(element, startNode) + startOffset;
-      range.set(rangeFrom <= rangeTo ? rangeFrom : 0, rangeTo);
+      if (!docRange.collapsed)
+        rangeFrom = rangeFrom < rangeTo ? rangeFrom : 0;
+      range.set(rangeFrom, rangeTo);
       return range;
     };
 
