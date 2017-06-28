@@ -159,8 +159,10 @@ class CustomLinkTool extends ContentTools.Tools.Link
                 element.updateInnerHTML()
                 element.restoreState()
 
-            # Make sure the element is marked as tainted
-            element.taint()
+                ContentTools.Tools.Link.dispatchEditorEvent('tool-applied',toolDetail)
+				
+			# Make sure the element is marked as tainted
+			element.taint()
 			
 			modal.hide()
 			dialog.hide()

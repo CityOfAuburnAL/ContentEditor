@@ -10930,8 +10930,9 @@
           }
           element.updateInnerHTML();
           element.restoreState();
-          element.taint();
+          ContentTools.Tools.Link.dispatchEditorEvent('tool-applied', toolDetail);
         }
+        element.taint();
         modal.hide();
         dialog.hide();
         return callback(true);

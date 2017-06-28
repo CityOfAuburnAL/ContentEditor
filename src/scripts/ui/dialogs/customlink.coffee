@@ -422,6 +422,10 @@ class BasicAnchorUI extends ContentTools.AnchoredComponentUI
 	targetValue: () ->
 		#targetCSSClass = @_domTargetSection.getAttribute('class')
 		#return (targetCSSClass.indexOf('ct-section--applied') > -1 ? '_blank' : null)
+		#need to filter out current website
+		#@_domInput.value = @_domInput.value.replace(window.location.origin, ''); some older versions of IE 11 and Win10 have a bug leaving origin as undefined
+		#note: manually updated compiled code, haven't tested compiling this
+		@_domInput.value = @_domInput.value.replace('https://' + window.location.host, '')
 		if @_domInput.value.indexOf('//') is -1
 			return null
 		return '_blank'
